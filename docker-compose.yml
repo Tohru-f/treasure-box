@@ -1,0 +1,84 @@
+services:
+  db:
+    image: postgres:18.6-bookworm
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: treasure_box_development
+    volumes:
+      - db:/var/lib/postgresql
+    ports:
+      - '127.0.0.1:5432:5432'
+    networks:
+      - backend_net
+
+  # ランキング表示を高速で処理してユーザーへ提供する
+  valkey:
+    image: valkey/valkey:9.1.2
+    # サーバー起動コマンド 60秒に1回以上変更があれば永続化保存(コンテナ停止時にメモリが消えるため) ログを推奨程度で表示
+    command: valkey-server --save 60 1 --loglevel notice
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ['CMD', 'valkey-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    ports:
+      - '127.0.0.1:6379:6379'
+    networks: # 内部DNS(名前解決)でIPアドレスが変わってもOK 他のDockerプロジェクトから分離
+      - backend_net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    command: npm run dev
+    volumes:
+      - ./frontend:/app # バインドマウント(ホストPCと接続)
+      - /app/node_modules # 匿名ボリューム(ホストPCと同期せず、Docker内部に別途保存)
+      - /app/.next # 匿名ボリューム(ホストPCと同期せず、Docker内部に別途保存)
+    ports:
+      - '127.0.0.1:8000:3000' # ホスト側ポート(左側)がbackendと重複しないように。コンテナ側は他コンテナと独立しているので重複問題無し
+    tty: true
+    stdin_open: true
+    networks:
+      - frontend_net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    environment:
+      DATABASE_HOST: db
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: password
+      VALKEY_URL: redis://valkey:6379/0
+    networks:
+      - frontend_net
+      - backend_net
+    volumes:
+      - ./backend:/app
+      - bundle:/usr/local/bundle
+    ports:
+      - '127.0.0.1:3000:3000' # ホスト側ポート(左側)がfrontendと重複しないように。コンテナ側は他コンテナと独立しているので重複問題無し
+    depends_on:
+      db:
+        condition: service_started
+      valkey:
+        condition: service_healthy
+    tty: true
+    stdin_open: true
+volumes:
+  bundle:
+  db:
+  valkey-data:
+networks:
+  frontend_net:
+    driver: bridge # 同一ネットワーク内でのみ通信可
+  backend_net:
+    driver: bridge
