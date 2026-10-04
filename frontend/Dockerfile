@@ -25,15 +25,22 @@ WORKDIR /app
 # Next.jsとNode.jsを最高速度・最小リソースで動かす本番モードへ切り替え。レンダリング処理やメモリ使用を最小限に抑える
 ENV NODE_ENV=production
 
-# ビルドステージから必要な成果物だけを取得してイメージを軽くする
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
+# node server.jsが検知できるようにIPアドレスを指定
+ENV HOSTNAME="0.0.0.0"
+ENV PORT=3000
 
-# 開発環境用は省く
-RUN npm ci --omit=dev
+# Standalone出力された自己完結型ファイル群を全てコピー。コンテナ乗っ取り対策でファイルの権限を作成したユーザーにする
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+
+# 動的アセット(CSS/JS/画像など)をstandalone内のパスへコピー。コンテナ乗っ取り対策でファイルの権限を作成したユーザーにする
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/public ./public
+
+# 実行ユーザーをrootからnodeユーザーに変更
+USER node
 
 # Next.jsの開発サーバーポートを開放
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+# .next/standaloneをapp直下にコピーしているのでこのコマンドで実行
+CMD ["node", "server.js"]

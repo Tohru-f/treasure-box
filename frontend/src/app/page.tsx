@@ -1,13 +1,8 @@
 export default async function Home() {
-  const res = await fetch('http://backend:3000/api/v1/health', {
+  const baseUrl = process.env.API_BASE_URL;
+  const res = await fetch(`${baseUrl}/health`, {
     cache: 'no-store',
   });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    console.error('Fetch error:', errorText);
-    throw new Error(`Failed to fetch API: ${res.status}`);
-  }
 
   const data = await res.json(); // JSONを受け取って、JavaScriptのオブジェクトを生成
 

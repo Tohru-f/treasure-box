@@ -30,5 +30,15 @@ module App
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    # タイムゾーンの設定、DBへの書き込みはUTC時間に設定。表示する時に日本時間へ変換する
+    config.time_zone = 'Tokyo'
+    config.active_record.default_timezone = :utc
+
+    # 日本語化。サブディレクトリも対象とする
+    config.i18n.default_locale = :ja
+    config.i18n.load_path += Dir[Rails.root.join('config', 'locales', '**', '*.{rb,yml}').to_s]
+
+    config.middleware.use ActionDispatch::Cookies
   end
 end

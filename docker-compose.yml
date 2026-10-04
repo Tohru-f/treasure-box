@@ -42,6 +42,8 @@ services:
       - /app/.next # 匿名ボリューム(ホストPCと同期せず、Docker内部に別途保存)
     ports:
       - '127.0.0.1:8000:3000' # ホスト側ポート(左側)がbackendと重複しないように。コンテナ側は他コンテナと独立しているので重複問題無し
+    environment:
+      API_BASE_URL: http://backend:3000/api/v1
     tty: true
     stdin_open: true
     networks:
