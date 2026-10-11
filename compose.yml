@@ -64,7 +64,7 @@ services:
       - frontend_net
       - backend_net
     volumes:
-      - ./backend:/app
+      - ./backend:/myapp
       - bundle:/usr/local/bundle
     ports:
       - '127.0.0.1:3000:3000' # ホスト側ポート(左側)がfrontendと重複しないように。コンテナ側は他コンテナと独立しているので重複問題無し

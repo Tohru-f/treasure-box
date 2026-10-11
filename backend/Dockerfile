@@ -1,5 +1,5 @@
 FROM ruby:3.4.10-slim-bookworm AS base
-WORKDIR /app
+WORKDIR /myapp
 # 推奨パッケージをインストールせず、ライブラリのインデックスリストは削除してイメージのスリム化
 RUN apt-get update -qq && apt-get install -y --no-install-recommends libpq-dev tzdata && rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
@@ -32,7 +32,7 @@ COPY . .
 
 FROM ruby:3.4.10-slim-bookworm AS production
 
-WORKDIR /app
+WORKDIR /myapp
 
 RUN apt-get update -qq && apt-get install -y --no-install-recommends libpq-dev tzdata && rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
@@ -48,7 +48,7 @@ RUN groupadd --system --gid 1000 rails && \
 # Gemのデータだけをコピーして、容量が重いコンパイラを省く。コンテナ乗っ取り対策でファイルの権限を作成したユーザーにする
 COPY --from=builder --chown=rails:rails /usr/local/bundle /usr/local/bundle
 # 本番環境にだけ必要なコード、Gem設定が適用されたソースコードを取得する
-COPY --from=builder --chown=rails:rails /app /app
+COPY --from=builder --chown=rails:rails /myapp /myapp
 
 # 実行ユーザーをrootからrailsユーザーに変更
 USER rails
