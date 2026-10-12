@@ -1,0 +1,47 @@
+# OS・エディタ関連
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+
+# Git関連
+.git
+.gitignore
+
+# Docker・インフラ関連
+Dockerfile*
+.dockerignore
+compose*
+docker-compose*
+docker/
+
+# Bundler・Gem関連
+.bundle
+/vendor/bundle
+
+# ログ・一時ファイル・アップロードデータ
+log/*
+!log/.keep
+tmp/*
+!tmp/.keep
+storage/*
+!storage/.keep
+.byebug_history
+
+
+# 機密情報・環境変数(コンテナに埋め込まない)
+*.env
+.env*
+config/master.key
+
+tmp/pids/*
+!tmp/pids/.keep
+
+# 静的ファイル・ビルド生成物(APIモードで不要な物) 
+public/assets
+public/packs
+public/packs-test
+node_modules
+yarn-error.log
+yarn-debug.log*
+.yarn-integrity
